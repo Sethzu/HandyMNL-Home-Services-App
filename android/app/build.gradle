@@ -1,0 +1,48 @@
+plugins {
+    id "com.android.application"
+    // START: FlutterFire Configuration
+    id 'com.google.gms.google-services'
+    // END: FlutterFire Configuration
+    id "kotlin-android"
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+android {
+    namespace = "com.test2.app"
+    compileSdkVersion 34  // Ensure compileSdkVersion is up to date
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"  // Ensure compatibility with Java 8
+    }
+
+    defaultConfig {
+        applicationId "com.test2.app"
+        minSdkVersion 23  // Firebase and Android API 23 compatibility
+        targetSdkVersion 34  // Explicitly set targetSdkVersion to 34
+        versionCode 1  // Ensure your versionCode
+        versionName "1.0"  // Ensure your versionName
+    }
+
+    buildTypes {
+        release {
+            // For development builds, debug signing is fine, but replace this with a proper release keystore when you are ready for production
+            signingConfig signingConfigs.debug  
+        }
+    }
+}
+
+flutter {
+    source = "../.."  // Path to your Flutter source
+}
+
+dependencies {
+    // Use the jdk8 version of Kotlin for better compatibility
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.10"  
+    implementation platform('com.google.firebase:firebase-bom:33.2.0')
+}
