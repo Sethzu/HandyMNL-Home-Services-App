@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:intl/intl.dart'; // For formatting dates
+import 'customer_checks_workerprofile.dart'; // Import worker profile page
 
 class CustomerHomePendingOffers extends StatefulWidget {
   const CustomerHomePendingOffers({super.key});
@@ -18,6 +20,7 @@ class _CustomerHomePendingOffersState extends State<CustomerHomePendingOffers> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           const SizedBox(height: 40),
@@ -67,6 +70,7 @@ class _CustomerHomePendingOffersState extends State<CustomerHomePendingOffers> {
                   .where('customerId',
                       isEqualTo: FirebaseAuth.instance.currentUser!.uid)
                   .where('status', isEqualTo: _selectedSegment)
+                  .orderBy('timestamp', descending: true) // Order by timestamp
                   .snapshots(),
               builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (!snapshot.hasData) {
@@ -84,50 +88,87 @@ class _CustomerHomePendingOffersState extends State<CustomerHomePendingOffers> {
                   );
                 }
 
-                return ListView.builder(
-                  itemCount: offers.length,
-                  itemBuilder: (context, index) {
-                    final offer = offers[index];
-                    return Card(
-                      margin: const EdgeInsets.all(10),
-                      child: ListTile(
-                        title: Text(
-                          'Offer to ${offer['workerName']}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
+return ListView.builder(
+  itemCount: offers.length,
+  itemBuilder: (context, index) {
+    final offer = offers[index];
+
+    // Safely check if 'timestamp' exists and handle null values
+    final Timestamp? timestamp = offer['timestamp'] as Timestamp?;
+    DateTime dateTime = timestamp?.toDate() ?? DateTime.now(); // Fallback to current time if null
+
+    // Convert the dateTime to Philippine Time (UTC+8)
+    dateTime = dateTime.add(const Duration(hours: 8)); // Add 8 hours for PHT (UTC+8)
+
+    // Format date as MM/DD/YY and time as 12-hour format with AM/PM
+    final formattedDate = DateFormat('MM/dd/yy').format(dateTime);
+    final formattedTime = DateFormat('hh:mm a').format(dateTime); // 12-hour format with AM/PM
+
+    return GestureDetector(
+      onTap: () {
+        // Navigate to worker profile on tap
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CustomerChecksWorkerProfilePage(
+              workerId: offer['workerId'],
+            ),
+          ),
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.all(10),
+        child: ListTile(
+          tileColor: Colors.white, // Set background color to white
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Offer to ${offer['workerName']}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                '$formattedDate at $formattedTime', // Display date and time in the correct format
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.location_on, color: Colors.blueAccent),
+                  const SizedBox(width: 5),
+                  Text(offer['workerDistrict'] ?? 'Unknown District'),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Service: ${offer['service']}\n'
+                'Subcategory: ${offer['subcategory']}\n'
+                'Description: ${offer['description'] ?? 'No description provided'}',
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Offered Price: ₱${offer['price']}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.blueAccent,
+                ),
+              ),
+            ],
+          ),
+          trailing: _buildTrailingWidget(context, offer),
                         ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.location_on,
-                                    color: Colors.blueAccent),
-                                const SizedBox(width: 5),
-                                Text(offer['workerDistrict'] ??
-                                    'Unknown District'),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Service: ${offer['service']}\n'
-                              'Subcategory: ${offer['subcategory']}\n'
-                              'Description: ${offer['description'] ?? 'No description provided'}',
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Offered Price: ₱${offer['price']}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.blueAccent,
-                              ),
-                            ),
-                          ],
-                        ),
-                        trailing: _buildTrailingWidget(context, offer),
                       ),
                     );
                   },
@@ -142,11 +183,11 @@ class _CustomerHomePendingOffersState extends State<CustomerHomePendingOffers> {
 
   String _getEmptyMessage(String segment) {
     if (segment == 'Pending') {
-      return 'You have not made any offers yet.';
+      return 'You currently have no pending offers.';
     } else if (segment == 'Accepted') {
-      return 'You have no accepted offers.';
+      return 'You currently have no accepted offers.';
     } else {
-      return 'You have no declined offers.';
+      return 'Great job! You have no declined offers yet!';
     }
   }
 

@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';  // Import Firebase Authentication package
 import 'package:flutter/material.dart';  // Import Flutter's Material Design package
 import 'package:cloud_firestore/cloud_firestore.dart';  // Import Firestore to fetch user data
+import 'package:test_2/CustomerPages/customer_navigation.dart';
+import 'package:test_2/WorkerPages/worker_navigation.dart';
 import 'package:test_2/userAuthentication/auth_page.dart';  // Import the authentication page for login/register
-import 'package:test_2/CustomerPages/home_page.dart';  // Import the home page for customers
-import 'package:test_2/WorkerPages/workerhome_page.dart';  // Import the home page for workers
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
@@ -29,9 +29,9 @@ class MainPage extends StatelessWidget {
                   } else if (userTypeSnapshot.hasData) {
                     // Once userType is fetched, navigate accordingly
                     if (userTypeSnapshot.data == 1) {
-                      return const HomePage();  // Show Customer's HomePage
+                      return const CustomerNavigation();  // Show Customer's HomePage
                     } else if (userTypeSnapshot.data == 2) {
-                      return const WorkerHomePage();  // Show Worker's HomePage
+                      return const WorkerNavigation();  // Show Worker's HomePage
                     } else {
                       return const Center(child: Text('User type not found.'));
                     }

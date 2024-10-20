@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:test_2/WorkerPages/WorkerProfile/WorkerProfile_Main/worker_profile_search.dart';
 import 'package:test_2/WorkerPages/worker_bookings_page.dart';
-import 'package:test_2/WorkerPages/worker_profile_page.dart';
+import 'package:test_2/WorkerPages/WorkerProfile/WorkerProfile_Main/worker_profile_page.dart';
+import 'package:test_2/WorkerPages/worker_inbox.dart';
 
 class WorkerNavigation extends StatefulWidget {
   const WorkerNavigation({super.key});
@@ -62,37 +65,76 @@ class _WorkerNavigationState extends State<WorkerNavigation> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Hello, $firstName'),
-        centerTitle: true,
-      ),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: Colors.blueAccent,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Bookings',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openServiceDialog,
-        backgroundColor: Colors.blueAccent,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: _selectedIndex != 1
+        ? AppBar(
+            backgroundColor: Colors.white, // Match page background
+            elevation: 0,
+            toolbarHeight: 80, // Increase AppBar height
+            automaticallyImplyLeading: false, // Remove back button
+            title: Text(
+              'HANDYMNL', // Title set to 'Home'
+              style: GoogleFonts.bebasNeue( // Apply GoogleFonts.bebasNeue
+                color: Colors.blueAccent,
+                fontSize: 35, // Larger font size for better visibility
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            actions: [
+              // Search Icon Button
+              IconButton(
+                icon: const Icon(Icons.search_outlined,
+                    color: Colors.grey, size: 30), // Increased size
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const WorkerProfileSearch()), // Navigate to worker_profile_search.dart
+                  );
+                },
+              ),
+              // Inbox Icon Button
+              IconButton(
+                icon: const Icon(Icons.forum,
+                    color: Colors.grey, size: 30), // Inbox icon instead of settings
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const WorkerInbox()), // Navigate to worker_inbox.dart
+                  );
+                },
+              ),
+            ],
+          )
+        : null, // Remove AppBar when 'Profile' is selected
+
+    body: _pages[_selectedIndex],
+    bottomNavigationBar: BottomNavigationBar(
+      currentIndex: _selectedIndex,
+      onTap: _onItemTapped,
+      selectedItemColor: Colors.blueAccent,
+      unselectedItemColor: Colors.grey,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.calendar_today),
+          label: 'Bookings',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person),
+          label: 'Profile',
+        ),
+      ],
+    ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: _openServiceDialog,
+      backgroundColor: Colors.blueAccent,
+      shape: const CircleBorder(),
+      child: const Icon(Icons.add, color: Colors.white),
+    ),
+    floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }
@@ -140,7 +182,6 @@ class _ServiceDialogState extends State<_ServiceDialog> {
     }
 
     if (currentUser != null) {
-      // Check if the service and subcategory already exist for this worker
       final existingService = await FirebaseFirestore.instance
           .collection('Services')
           .where('workerId', isEqualTo: currentUser.uid)
@@ -148,7 +189,6 @@ class _ServiceDialogState extends State<_ServiceDialog> {
           .where('subcategory', isEqualTo: _selectedSubcategory)
           .get();
 
-      // If the service already exists, show an error message
       if (existingService.docs.isNotEmpty) {
         setState(() {
           _errorMessage = 'You have already posted this service.';
@@ -156,7 +196,6 @@ class _ServiceDialogState extends State<_ServiceDialog> {
         return;
       }
 
-      // Get the worker's data
       final workerDoc = await FirebaseFirestore.instance
           .collection('Workers')
           .doc(currentUser.uid)
@@ -165,7 +204,6 @@ class _ServiceDialogState extends State<_ServiceDialog> {
       if (workerDoc.exists) {
         final workerData = workerDoc.data();
 
-        // Fetch the worker's average rating and total reviews from 'WorkerAverageRatings'
         final ratingDoc = await FirebaseFirestore.instance
             .collection('WorkerAverageRatings')
             .doc(currentUser.uid)
@@ -179,7 +217,6 @@ class _ServiceDialogState extends State<_ServiceDialog> {
           totalReviews = ratingDoc.data()?['totalReviews'] ?? 0;
         }
 
-        // Add the service data along with averageRating and totalReviews
         await FirebaseFirestore.instance.collection('Services').add({
           'service': _selectedService,
           'subcategory': _selectedSubcategory,
@@ -190,15 +227,13 @@ class _ServiceDialogState extends State<_ServiceDialog> {
           'last name': workerData?['last name'],
           'district': workerData?['district'],
           'phone': workerData?['phone'],
-          'timestamp':
-              FieldValue.serverTimestamp(), // Firestore server timestamp
-          'date':
-              DateFormat('yyyy-MM-dd').format(DateTime.now()), // Formatted date
-          'averageRating': averageRating, // Add average rating
-          'totalReviews': totalReviews, // Add total reviews
+          'timestamp': FieldValue.serverTimestamp(),
+          'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+          'averageRating': averageRating,
+          'totalReviews': totalReviews,
         });
 
-        Navigator.pop(context); // Close the dialog after posting
+        Navigator.pop(context);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -229,18 +264,47 @@ class _ServiceDialogState extends State<_ServiceDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Select a Service',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.black),
+                    onPressed: () {
+                      Navigator.pop(context); // Close the bottom sheet
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
               const Text(
-                'Select Service',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                'Service:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-              DropdownButton<String>(
+              DropdownButtonFormField<String>(
                 value: _selectedService,
-                hint: const Text('Choose a service'),
+                hint: const Text(
+                  'Choose a service',
+                  style:
+                      TextStyle(fontSize: 18), // Set font size as per reference
+                ),
                 items: _services.keys.map((String service) {
                   return DropdownMenuItem<String>(
                     value: service,
-                    child: Text(service),
+                    child: Center(
+                      child: Text(
+                        service,
+                        style: const TextStyle(color: Colors.black),
+                      ),
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -249,21 +313,38 @@ class _ServiceDialogState extends State<_ServiceDialog> {
                     _selectedSubcategory = null;
                   });
                 },
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(4.0),
+                    borderSide: const BorderSide(color: Colors.blueAccent),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blueAccent, width: 3),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                ),
+                dropdownColor: Colors.grey[200],
+                style: const TextStyle(fontSize: 18, color: Colors.black),
               ),
               if (_selectedService != null) ...[
                 const SizedBox(height: 20),
                 const Text(
-                  'Select Subcategory',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  'Subcategory:',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
-                DropdownButton<String>(
+                DropdownButtonFormField<String>(
                   value: _selectedSubcategory,
                   hint: const Text('Choose a subcategory'),
                   items: _services[_selectedService]!.map((String subcategory) {
                     return DropdownMenuItem<String>(
                       value: subcategory,
-                      child: Text(subcategory),
+                      child: Center(
+                        child: Text(
+                          subcategory,
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -271,64 +352,63 @@ class _ServiceDialogState extends State<_ServiceDialog> {
                       _selectedSubcategory = value;
                     });
                   },
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4.0),
+                      borderSide: const BorderSide(color: Colors.blueAccent),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide:
+                          BorderSide(color: Colors.blueAccent, width: 3),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                  ),
+                  dropdownColor: Colors.grey[200],
+                  style: const TextStyle(fontSize: 18, color: Colors.black),
                 ),
               ],
               const SizedBox(height: 20),
-              Row(
-                children: [
-                  const Text('PHP'),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _priceController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Set Price',
-                        border: OutlineInputBorder(),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.blueAccent,
-                            width: 2.0,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              const Text(
+                'Price:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
+              TextField(
+                controller: _priceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Set Price',
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.blueAccent,
+                      width: 3,
+                    ),
+                  ),
+                ),
+              ),
               if (_errorMessage != null)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
+                  padding: const EdgeInsets.only(bottom: 8.0, top: 8),
                   child: Text(
                     _errorMessage!,
                     style: const TextStyle(color: Colors.red),
                   ),
                 ),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context); // Close the dialog
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Cancel'),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _postService,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
                   ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: _postService, // Post to Firestore
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Post'),
+                  child: const Text(
+                    'Post',
+                    style: TextStyle(color: Colors.white, fontSize: 18),
                   ),
-                ],
+                ),
               ),
             ],
           ),

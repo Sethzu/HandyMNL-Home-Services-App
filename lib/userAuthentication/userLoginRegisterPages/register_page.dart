@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:test_2/CustomerPages/home_page.dart';
-import 'package:test_2/WorkerPages/workerhome_page.dart';
+import 'package:test_2/CustomerPages/customer_navigation.dart';
+import 'package:test_2/WorkerPages/worker_navigation.dart';
 
 class RegisterPage extends StatefulWidget {
   final VoidCallback showLoginPage;
@@ -96,10 +96,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
         if (_selectedUserType == 1) {
           Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => const HomePage()));
+              MaterialPageRoute(builder: (context) => const CustomerNavigation()));
         } else {
           Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => const WorkerHomePage()));
+              MaterialPageRoute(builder: (context) => const WorkerNavigation()));
         }
 
         _showSuccessDialog();
@@ -116,19 +116,31 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future addUserDetails(String firstName, String lastName, String email,
-      String birthdate, String district, String phone, int userType) async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    final collection = userType == 1 ? 'Customers' : 'Workers';
-    await FirebaseFirestore.instance.collection(collection).doc(uid).set({
-      'first name': firstName,
-      'last name': lastName,
-      'email': email,
-      'birthdate': birthdate,
-      'district': district,
-      'phone': phone,
-      'userType': userType,
-    });
-  }
+    String birthdate, String district, String phone, int userType) async {
+  final uid = FirebaseAuth.instance.currentUser!.uid;
+  final collection = userType == 1 ? 'Customers' : 'Workers';
+  
+  final userDetails = {
+    'first name': firstName,
+    'last name': lastName,
+    'email': email,
+    'birthdate': birthdate,
+    'district': district,
+    'phone': phone,
+    'userType': userType,
+  };
+
+  // Add userid for customer and worker
+ if (userType == 1) {
+  userDetails['customerId'] = uid;
+} else if (userType == 2) {
+  userDetails['workerId'] = uid;
+}
+
+
+  await FirebaseFirestore.instance.collection(collection).doc(uid).set(userDetails);
+}
+
 
   bool _validateInput() {
     if (_emailController.text.isEmpty ||

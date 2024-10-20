@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:test_2/CustomerPages/home_page.dart';  // Customer home page
-import 'package:test_2/WorkerPages/workerhome_page.dart';  // Worker home page
+import 'package:test_2/CustomerPages/customer_navigation.dart';
+import 'package:test_2/WorkerPages/worker_navigation.dart';
 
 class LoginPage extends StatefulWidget {
   final VoidCallback showRegisterPage;
@@ -52,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
           if (mounted) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const HomePage()),
+              MaterialPageRoute(builder: (context) => const CustomerNavigation()),
             );
           }
         } else if (workerSnapshot.exists) {
@@ -60,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
           if (mounted) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const WorkerHomePage()),
+              MaterialPageRoute(builder: (context) => const WorkerNavigation()),
             );
           }
         } else {

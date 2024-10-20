@@ -2,9 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart'; // For formatting the timestamp
 import 'worker_services_seeall.dart';
-import 'worker_reviews_seeall.dart'; // Import worker reviews see-all page
+import 'worker_reviews_seeall.dart';
+import 'worker_profile_search.dart'; // Add the worker profile search page
+import '../WorkerProfile_Settings/worker_profile_settings.dart'; // Add the worker profile settings page
 
 class WorkerProfilePage extends StatefulWidget {
   const WorkerProfilePage({super.key});
@@ -133,8 +136,8 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
   }
 
   // Dialog to confirm price edit
-  void showEditPriceDialog(String serviceId, String service,
-      String subcategory, TextEditingController priceController) {
+  void showEditPriceDialog(String serviceId, String service, String subcategory,
+      TextEditingController priceController) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -168,7 +171,8 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Confirm Service Deletion'),
-          content: Text("Are you sure you want to delete '$service' - '$subcategory'?"),
+          content: Text(
+              "Are you sure you want to delete '$service' - '$subcategory'?"),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -203,7 +207,10 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
   // Method to delete service
   Future<void> deleteService(String serviceId) async {
     try {
-      await FirebaseFirestore.instance.collection('Services').doc(serviceId).delete();
+      await FirebaseFirestore.instance
+          .collection('Services')
+          .doc(serviceId)
+          .delete();
       fetchWorkerServices(); // Refresh the services after deletion
     } catch (e) {
       print('Error deleting service: $e');
@@ -213,24 +220,62 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white, // Match page background
+        elevation: 0,
+        toolbarHeight: 80, // Increase AppBar height
+        automaticallyImplyLeading: false, // Remove back button
+        // Set 'Profile' text directly as the title (left-aligned by default)
+        title: Text(
+          'Profile',
+          style: GoogleFonts.bebasNeue(
+            // Apply GoogleFonts.bebasNeue
+            color: Colors.black,
+            fontSize: 35, // Larger font size for better visibility
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon:
+                const Icon(Icons.search_outlined, color: Colors.grey, size: 30),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const WorkerProfileSearch()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.grey, size: 30),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const WorkerProfileSettings()),
+              );
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 30),
-              // Worker Name
+              const SizedBox(height: 20),
               Text(
                 '$firstName $lastName',
                 style: const TextStyle(
-                  fontSize: 28,
+                  fontSize: 25,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 16),
-              // Worker Email and District
+              const SizedBox(height: 10),
               Row(
                 children: [
                   const Icon(Icons.email, color: Colors.grey),
@@ -253,7 +298,6 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                 ],
               ),
               const SizedBox(height: 16),
-              // Worker Rating and Reviews Count
               Row(
                 children: [
                   const Icon(Icons.star, color: Colors.amber),
@@ -271,7 +315,6 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
               ),
               const SizedBox(height: 30),
               const Divider(thickness: 2),
-              // Services Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -288,8 +331,7 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) =>
-                                const WorkerServicesSeeAll()),
+                            builder: (context) => const WorkerServicesSeeAll()),
                       );
                     },
                     child: const Text(
@@ -300,7 +342,6 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                 ],
               ),
               const SizedBox(height: 10),
-              // Services List
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -365,7 +406,6 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                 },
               ),
               const Divider(thickness: 2),
-              // Worker Ratings Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -406,15 +446,14 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                 ],
               ),
               const SizedBox(height: 10),
-              // Reviews List
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: reviews.length,
                 itemBuilder: (context, index) {
                   final review = reviews[index];
-                  final formattedDate = DateFormat.yMMMd()
-                      .format(review['timestamp']);
+                  final formattedDate =
+                      DateFormat.yMMMd().format(review['timestamp']);
                   return Column(
                     children: [
                       ListTile(
@@ -424,8 +463,8 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                           children: [
                             Text(
                               review['customerName'],
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             Text(
                               formattedDate,
@@ -438,8 +477,7 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                           children: [
                             RatingBarIndicator(
                               rating: review['ratingnumber'],
-                              itemBuilder: (context, index) =>
-                                  const Icon(
+                              itemBuilder: (context, index) => const Icon(
                                 Icons.star,
                                 color: Colors.amberAccent,
                               ),

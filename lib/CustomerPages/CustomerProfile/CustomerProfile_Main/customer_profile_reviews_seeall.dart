@@ -4,14 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart'; // For formatting the timestamp
 
-class WorkerReviewsSeeAll extends StatefulWidget {
-  const WorkerReviewsSeeAll({super.key});
+class CustomerProfileReviewsSeeAll extends StatefulWidget {
+  const CustomerProfileReviewsSeeAll({super.key});
 
   @override
-  _WorkerReviewsSeeAllState createState() => _WorkerReviewsSeeAllState();
+  _CustomerProfileReviewsSeeAllState createState() =>
+      _CustomerProfileReviewsSeeAllState();
 }
 
-class _WorkerReviewsSeeAllState extends State<WorkerReviewsSeeAll> {
+class _CustomerProfileReviewsSeeAllState
+    extends State<CustomerProfileReviewsSeeAll> {
   List<Map<String, dynamic>> allReviews = [];
 
   @override
@@ -20,71 +22,82 @@ class _WorkerReviewsSeeAllState extends State<WorkerReviewsSeeAll> {
     fetchAllReviews();
   }
 
+  // Fetch all reviews of the customer from 'WorkerGiveRating' collection
   Future<void> fetchAllReviews() async {
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
         final reviewsSnapshot = await FirebaseFirestore.instance
-            .collection('CustomerGiveRating')
-            .where('workerId', isEqualTo: currentUser.uid)
+            .collection('WorkerGiveRating')
+            .where('customerId', isEqualTo: currentUser.uid)
             .orderBy('timestamp', descending: true)
             .get();
 
         setState(() {
           allReviews = reviewsSnapshot.docs.map((doc) {
+            // Convert Firestore timestamp to DateTime and adjust to UTC+8
+            DateTime timestamp = doc['timestamp'].toDate();
+            DateTime localTimestamp =
+                timestamp.add(const Duration(hours: 8)); // Adjust to UTC+8
             return {
-              'customerName': doc['customerName'],
-              'timestamp': doc['timestamp'].toDate(),
+              'workerName': doc['workerName'],
               'ratingnumber': doc['ratingnumber'],
               'service': doc['service'],
               'subcategory': doc['subcategory'],
               'reviewdescription': doc['reviewdescription'],
+              'timestamp': localTimestamp, // Use the adjusted timestamp
             };
           }).toList();
         });
       }
     } catch (e) {
-      print('Error fetching all reviews: $e');
+      print('Error fetching reviews: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('All Reviews'),
+        title: const Text(
+          'All Reviews',
+          style: TextStyle(color: Colors.white), // Make the title white
+        ),
         backgroundColor: Colors.blueAccent,
-        iconTheme: const IconThemeData(color: Colors.white), // Make AppBar icons white
-        actionsIconTheme: const IconThemeData(color: Colors.white), // Make actions icons white
-        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20), // Make title text white
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Make the back button white
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: allReviews.isNotEmpty
-            ? ListView.builder(
+        child: allReviews.isEmpty
+            ? const Center(
+                child: Text(
+                  "You don't have any reviews yet.",
+                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                ),
+              )
+            : ListView.builder(
                 itemCount: allReviews.length,
                 itemBuilder: (context, index) {
                   final review = allReviews[index];
-                  final formattedDate = DateFormat.yMMMd()
-                      .format(review['timestamp']); // Format the timestamp
-
+                  final formattedDate =
+                      DateFormat.yMMMd().format(review['timestamp']);
                   return Column(
                     children: [
                       ListTile(
-                        tileColor: Colors.white, // Set the background color to white
+                        tileColor: Colors.white,
                         title: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Flexible(
-                              child: Text(
-                                review['customerName'],
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                            Text(
+                              review['workerName'],
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold),
                             ),
                             Text(
-                              formattedDate, // Use formatted timestamp
+                              formattedDate,
                               style: const TextStyle(color: Colors.grey),
                             ),
                           ],
@@ -96,7 +109,7 @@ class _WorkerReviewsSeeAllState extends State<WorkerReviewsSeeAll> {
                               rating: review['ratingnumber'],
                               itemBuilder: (context, index) => const Icon(
                                 Icons.star,
-                                color: Colors.amber,
+                                color: Colors.amberAccent,
                               ),
                               itemCount: 5,
                               itemSize: 20.0,
@@ -111,16 +124,10 @@ class _WorkerReviewsSeeAllState extends State<WorkerReviewsSeeAll> {
                           ],
                         ),
                       ),
-                      const Divider(thickness: 1), // Add subtle border (divider) below each review
+                      const Divider(thickness: 1),
                     ],
                   );
                 },
-              )
-            : const Center(
-                child: Text(
-                  'No reviews available',
-                  style: TextStyle(fontSize: 18, color: Colors.black),
-                ),
               ),
       ),
     );

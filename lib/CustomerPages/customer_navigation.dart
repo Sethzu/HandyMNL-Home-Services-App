@@ -1,9 +1,13 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:test_2/CustomerPages/CustomerProfile/CustomerProfile_Main/customer_profile_search.dart';
 import 'package:test_2/CustomerPages/customer_home.dart';
 import 'package:test_2/CustomerPages/customer_home_pendingoffers.dart';
-import 'package:test_2/CustomerPages/customer_profile.dart';
+import 'package:test_2/CustomerPages/CustomerProfile/CustomerProfile_Main/customer_profile.dart';
+import 'package:test_2/CustomerPages/customer_inbox.dart';
 
 class CustomerNavigation extends StatefulWidget {
   const CustomerNavigation({super.key});
@@ -67,23 +71,64 @@ class _CustomerNavigationState extends State<CustomerNavigation> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Hello, $firstName'),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: _pages[_selectedIndex],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openServiceDialog,
-        backgroundColor: Colors.blueAccent,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.search, color: Colors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
+Widget build(BuildContext context) {
+  return Scaffold(
+    // Only display the AppBar if the selected index is not 'Profile' (index 1)
+    appBar: _selectedIndex != 1
+        ? AppBar(
+            backgroundColor: Colors.white, // Match page background
+            elevation: 0,
+            toolbarHeight: 80, // Increase AppBar height
+            automaticallyImplyLeading: false, // Remove back button
+            title: Text(
+              'HANDYMNL', // Changed from 'Profile' to 'Home'
+              style: GoogleFonts.bebasNeue( // Apply GoogleFonts.bebasNeue
+                color: Colors.blueAccent,
+                fontSize: 35, // Larger font size for better visibility
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            actions: [
+              // Search Icon Button (kept the same)
+              IconButton(
+                icon: const Icon(Icons.search_outlined,
+                    color: Colors.grey, size: 30), // Increased size
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const CustomerProfileSearch()),
+                  );
+                },
+              ),
+              // Inbox Icon Button (replacing the settings icon)
+              IconButton(
+                icon: const Icon(Icons.forum_rounded, 
+                    color: Colors.grey, size: 30), // Inbox icon instead of settings
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const CustomerInbox()), // Navigating to customer_inbox.dart
+                  );
+                },
+              ),
+            ],
+          )
+        : null, // Remove the AppBar on the Profile page
+
+    body: SafeArea(
+      child: _pages[_selectedIndex],
+    ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: _openServiceDialog,
+      backgroundColor: Colors.blueAccent,
+      shape: const CircleBorder(),
+      child: const Icon(Icons.search, color: Colors.white),
+    ),
+    floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    bottomNavigationBar: SafeArea(
+      child: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
         child: SizedBox(
@@ -109,9 +154,10 @@ class _CustomerNavigationState extends State<CustomerNavigation> {
                 iconSize: 30,
                 onPressed: () {
                   _onItemTapped(1);
-                },
-              ),
-            ],
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -553,3 +599,5 @@ class _ServiceSearchDialogState extends State<_ServiceSearchDialog> {
     );
   }
 }
+
+

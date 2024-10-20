@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:test_2/Widgets/handyman_loading_indicator.dart'; // Importing the custom loading indicator
 
 class CustomerChecksWorkerProfileServicesSeeAll extends StatefulWidget {
   final String workerId;
@@ -16,6 +17,7 @@ class _CustomerChecksWorkerProfileServicesSeeAllState
   List<Map<String, dynamic>> services = [];
   List<Map<String, dynamic>> plumbingServices = [];
   List<Map<String, dynamic>> electricalServices = [];
+  bool isLoading = true; // Add loading state
 
   @override
   void initState() {
@@ -48,15 +50,18 @@ class _CustomerChecksWorkerProfileServicesSeeAllState
         electricalServices = services
             .where((service) => service['service'] == 'Electrical')
             .toList();
+        isLoading = false; // Stop loading when data is fetched
       });
     } catch (e) {
       print('Error fetching worker services: $e');
+      setState(() {
+        isLoading = false; // Stop loading in case of an error
+      });
     }
   }
 
   // Widget to display services by category
-  Widget buildServiceList(
-      String title, List<Map<String, dynamic>> servicesList) {
+  Widget buildServiceList(String title, List<Map<String, dynamic>> servicesList) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -110,33 +115,38 @@ class _CustomerChecksWorkerProfileServicesSeeAllState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+    backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('All Services'),
         backgroundColor: Colors.blueAccent,
         iconTheme: const IconThemeData(color: Colors.white),
         titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
       ),
-      body: services.isNotEmpty
-          ? SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (plumbingServices.isNotEmpty)
-                      buildServiceList('Plumbing', plumbingServices),
-                    if (electricalServices.isNotEmpty)
-                      buildServiceList('Electrical', electricalServices),
-                  ],
-                ),
-              ),
+      body: isLoading // Check if still loading
+          ? const Center(
+              child: HandymanLoadingIndicator(), // Show custom loading indicator
             )
-          : const Center(
-              child: Text(
-                'No services available',
-                style: TextStyle(color: Colors.blueAccent, fontSize: 18),
-              ),
-            ),
+          : services.isNotEmpty
+              ? SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (plumbingServices.isNotEmpty)
+                          buildServiceList('Plumbing', plumbingServices),
+                        if (electricalServices.isNotEmpty)
+                          buildServiceList('Electrical', electricalServices),
+                      ],
+                    ),
+                  ),
+                )
+              : const Center(
+                  child: Text(
+                    'No services available',
+                    style: TextStyle(color: Colors.blueAccent, fontSize: 18),
+                  ),
+                ),
     );
   }
 }

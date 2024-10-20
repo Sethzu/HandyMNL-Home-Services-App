@@ -94,6 +94,7 @@ class CustomerChecksWorkerProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+backgroundColor: Colors.white,     
       appBar: AppBar(
         title: const Text('Worker Profile'),
       ),
@@ -134,12 +135,12 @@ class CustomerChecksWorkerProfilePage extends StatelessWidget {
                   Text(
                     '$firstName $lastName',
                     style: const TextStyle(
-                      fontSize: 28,
+                      fontSize: 25,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       const Icon(Icons.email, color: Colors.grey),

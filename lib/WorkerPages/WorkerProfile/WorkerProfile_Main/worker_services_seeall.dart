@@ -222,6 +222,7 @@ class _WorkerServicesSeeAllState extends State<WorkerServicesSeeAll> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('All Services'),
         backgroundColor: Colors.blueAccent,

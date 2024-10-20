@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Sa module na to yung Service Results. Nagkamali lang ng file name
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart'; // Import for date formatting
+import 'package:test_2/ChatPage/chat_page.dart';
 import 'customer_checks_workerprofile.dart'; // Import for navigation to worker profile page
 
 class CustomerHomePage extends StatelessWidget {
@@ -13,8 +15,26 @@ class CustomerHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Service Results'),
-        // Removed the filter button and its related code
+        backgroundColor:
+            Colors.blueAccent, // Set the background color to blueAccent
+        centerTitle: true, // Center-align the title
+        title: Text(
+          'Service Results',
+          style: GoogleFonts.roboto(
+            // Apply the Roboto font
+            fontSize: 21, // Set font size to 21
+            color: Colors.white, // Set the text color to white
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+          ), // Change to arrow_back_ios_new
+          onPressed: () {
+            Navigator.pop(context); // Pop the current route (go back)
+          },
+        ),
       ),
       body: ListView.builder(
         itemCount: services.length,
@@ -91,22 +111,12 @@ class CustomerHomePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
 
-                    // Phone number
-                    Row(
-                      children: [
-                        const Icon(Icons.phone, color: Colors.grey),
-                        const SizedBox(width: 5),
-                        Text('${service['phone']}',
-                            style: const TextStyle(fontSize: 16)),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-
                     // Service subcategory
                     Row(
                       children: [
                         const Icon(Icons.handyman_outlined,
-                            color: Colors.grey), // Updated icon for handyman tool
+                            color:
+                                Colors.grey), // Updated icon for handyman tool
                         const SizedBox(width: 5),
                         Text('${service['subcategory']}',
                             style: const TextStyle(fontSize: 16)),
@@ -163,8 +173,55 @@ class CustomerHomePage extends StatelessWidget {
                         const SizedBox(width: 10),
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () {
-                              // Add logic for messaging
+                            onPressed: () async {
+                              // Redirect to the ChatPage when the message button is clicked
+                              final currentUser =
+                                  FirebaseAuth.instance.currentUser;
+                              if (currentUser == null) return;
+
+                              // Generate or fetch the conversation ID
+                              final conversationDoc = await FirebaseFirestore
+                                  .instance
+                                  .collection('Conversations')
+                                  .where('workerId',
+                                      isEqualTo: service['workerId'])
+                                  .where('customerId',
+                                      isEqualTo: currentUser.uid)
+                                  .limit(1)
+                                  .get();
+
+                              String conversationId;
+                              if (conversationDoc.docs.isEmpty) {
+                                // If no conversation exists, create a new one
+                                final newConversation = await FirebaseFirestore
+                                    .instance
+                                    .collection('Conversations')
+                                    .add({
+                                  'workerId': service['workerId'],
+                                  'customerId': currentUser.uid,
+                                  'lastMessage': '',
+                                  'lastMessageTimestamp':
+                                      FieldValue.serverTimestamp(),
+                                });
+                                conversationId = newConversation.id;
+                              } else {
+                                // Use the existing conversation
+                                conversationId = conversationDoc.docs.first.id;
+                              }
+
+                              // Navigate to the ChatPage
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChatPage(
+                                    conversationId: conversationId,
+                                    receiverFirstName: service['first name'],
+                                    receiverLastName: service['last name'],
+                                    receiverEmail: service['email'],
+                                    receiverUid: service['workerId'],
+                                  ),
+                                ),
+                              );
                             },
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 11),
@@ -295,7 +352,9 @@ class _OfferBottomSheetState extends State<OfferBottomSheet> {
             ),
             TextButton(
               onPressed: () async {
-                await FirebaseFirestore.instance.collection('PendingOffers').add({
+                await FirebaseFirestore.instance
+                    .collection('PendingOffers')
+                    .add({
                   'workerId': widget.service['workerId'],
                   'workerName':
                       '${widget.service['first name']} ${widget.service['last name']}',
