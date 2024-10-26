@@ -7,14 +7,15 @@ import 'package:test_2/Widgets/handyman_loading_indicator.dart'; // Importing th
 class CustomerChecksWorkerProfileReviewsSeeAll extends StatefulWidget {
   final String workerId;
 
-  const CustomerChecksWorkerProfileReviewsSeeAll({super.key, required this.workerId});
+  const CustomerChecksWorkerProfileReviewsSeeAll(
+      {super.key, required this.workerId});
 
   @override
-  _CustomerChecksWorkerProfileReviewsSeeAllState createState() =>
-      _CustomerChecksWorkerProfileReviewsSeeAllState();
+  CustomerChecksWorkerProfileReviewsSeeAllState createState() =>
+      CustomerChecksWorkerProfileReviewsSeeAllState();
 }
 
-class _CustomerChecksWorkerProfileReviewsSeeAllState
+class CustomerChecksWorkerProfileReviewsSeeAllState
     extends State<CustomerChecksWorkerProfileReviewsSeeAll> {
   List<Map<String, dynamic>> allReviews = [];
   bool isLoading = true; // State to track loading
@@ -57,77 +58,99 @@ class _CustomerChecksWorkerProfileReviewsSeeAllState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-    backgroundColor: Colors.white,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('All Reviews'),
+        centerTitle: true, // Centers the title
+        title: const Text(
+          'All Reviews',
+          style: TextStyle(
+            fontSize: 21, // Set font size to 21
+            fontFamily: 'Roboto', // Set font to Roboto
+            color: Colors.white, // Title color remains white
+          ),
+        ),
         backgroundColor: Colors.blueAccent,
-        iconTheme: const IconThemeData(color: Colors.white),
-        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Set back icon color to white
+        ),
+        leading: IconButton(
+          icon: const Icon(
+              Icons.arrow_back_ios_new), // Use the new back arrow icon
+          onPressed: () {
+            Navigator.pop(context); // Handles back navigation
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: isLoading // Show loading indicator if data is still being fetched
-            ? const Center(child: HandymanLoadingIndicator()) // Use the custom loading indicator
-            : allReviews.isNotEmpty
-                ? ListView.builder(
-                    itemCount: allReviews.length,
-                    itemBuilder: (context, index) {
-                      final review = allReviews[index];
-                      final formattedDate = DateFormat.yMMMd()
-                          .format(review['timestamp']);
+        child:
+            isLoading // Show loading indicator if data is still being fetched
+                ? const Center(
+                    child:
+                        HandymanLoadingIndicator()) // Use the custom loading indicator
+                : allReviews.isNotEmpty
+                    ? ListView.builder(
+                        itemCount: allReviews.length,
+                        itemBuilder: (context, index) {
+                          final review = allReviews[index];
+                          final formattedDate =
+                              DateFormat.yMMMd().format(review['timestamp']);
 
-                      return Column(
-                        children: [
-                          ListTile(
-                            tileColor: Colors.white,
-                            title: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    review['customerName'],
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
+                          return Column(
+                            children: [
+                              ListTile(
+                                tileColor: Colors.white,
+                                title: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        review['customerName'],
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    Text(
+                                      formattedDate,
+                                      style:
+                                          const TextStyle(color: Colors.grey),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  formattedDate,
-                                  style: const TextStyle(color: Colors.grey),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    RatingBarIndicator(
+                                      rating: review['ratingnumber'],
+                                      itemBuilder: (context, index) =>
+                                          const Icon(Icons.star,
+                                              color: Colors.amber),
+                                      itemCount: 5,
+                                      itemSize: 20.0,
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      '${review['service']} - ${review['subcategory']}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(review['reviewdescription']),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                RatingBarIndicator(
-                                  rating: review['ratingnumber'],
-                                  itemBuilder: (context, index) =>
-                                      const Icon(Icons.star, color: Colors.amber),
-                                  itemCount: 5,
-                                  itemSize: 20.0,
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  '${review['service']} - ${review['subcategory']}',
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                                const SizedBox(height: 5),
-                                Text(review['reviewdescription']),
-                              ],
-                            ),
-                          ),
-                          const Divider(thickness: 1),
-                        ],
-                      );
-                    },
-                  )
-                : const Center(
-                    child: Text(
-                      'No reviews available',
-                      style: TextStyle(fontSize: 18, color: Colors.black),
-                    ),
-                  ),
+                              ),
+                              const Divider(thickness: 1),
+                            ],
+                          );
+                        },
+                      )
+                    : const Center(
+                        child: Text(
+                          'No reviews available',
+                          style: TextStyle(fontSize: 18, color: Colors.black),
+                        ),
+                      ),
       ),
     );
   }

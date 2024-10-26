@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart'; // Import for formatting timestamps
-import 'package:test_2/ChatPage/chat_page.dart'; // Import your ChatPage
+import 'package:intl/intl.dart';
+import 'package:test_2/ChatPage/chat_page.dart';
 
 class WorkerInbox extends StatelessWidget {
   const WorkerInbox({super.key});
@@ -22,19 +22,20 @@ class WorkerInbox extends StatelessWidget {
         centerTitle: true,
         backgroundColor: Colors.blueAccent,
         iconTheme: const IconThemeData(
-          color: Colors.white, // Set back button color to white
+          color: Colors.white,
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () {
-            Navigator.pop(context); // Navigate back when tapped
+            Navigator.pop(context);
           },
         ),
       ),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection('Conversations')
-            .where('workerId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+            .where('workerId',
+                isEqualTo: FirebaseAuth.instance.currentUser!.uid)
             .orderBy('lastMessageTimestamp', descending: true)
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -46,14 +47,24 @@ class WorkerInbox extends StatelessWidget {
             itemBuilder: (context, index) {
               var conversation = snapshot.data!.docs[index];
               var customerId = conversation['customerId'];
+              var data = conversation.data() as Map<String,
+                  dynamic>?; // Ensure data is a Map<String, dynamic>
+              bool isRead = data != null && data.containsKey('isRead')
+                  ? data['isRead']
+                  : true;
+              var senderId = data != null && data.containsKey('senderId')
+                  ? data['senderId']
+                  : null;
+              var workerId = conversation['workerId'];
 
               return FutureBuilder<DocumentSnapshot>(
                 future: FirebaseFirestore.instance
                     .collection('Customers')
                     .doc(customerId)
                     .get(),
-                builder: (context, AsyncSnapshot<DocumentSnapshot> customerSnapshot) {
-                  if (!customerSnapshot.hasData) {
+                builder:
+                    (context, AsyncSnapshot<DocumentSnapshot> workerSnapshot) {
+                  if (!workerSnapshot.hasData) {
                     return const ListTile(
                       leading: CircleAvatar(
                           backgroundImage:
@@ -62,25 +73,28 @@ class WorkerInbox extends StatelessWidget {
                     );
                   }
 
-                  if (customerSnapshot.data == null || !customerSnapshot.data!.exists) {
+                  if (workerSnapshot.data == null ||
+                      !workerSnapshot.data!.exists) {
                     return const ListTile(
                       leading: CircleAvatar(
                           backgroundImage:
                               AssetImage('lib/assets/placeholder.png')),
-                      title: Text('Unknown Worker'),
+                      title: Text('Unknown Customer'),
                     );
                   }
 
-                  // Cast the worker data as a Map<String, dynamic>
-                  var customerData = customerSnapshot.data!.data() as Map<String, dynamic>;
-                  var lastMessage = conversation['lastMessage'] ?? 'No messages yet'; // Fallback for empty conversations
-                  var lastMessageTimestamp = conversation['lastMessageTimestamp'] as Timestamp?;
+                  var customerData =
+                      workerSnapshot.data!.data() as Map<String, dynamic>;
+                  var lastMessage =
+                      conversation['lastMessage'] ?? 'No messages yet';
+                  var lastMessageTimestamp =
+                      conversation['lastMessageTimestamp'] as Timestamp?;
 
-                  // Format the timestamp with UTC +8 offset
-var messageTime = lastMessageTimestamp != null
-    ? DateFormat('hh:mm a').format(lastMessageTimestamp.toDate().add(const Duration(hours: 8)))
-    : ''; // If no timestamp, leave it blank
-
+                  var messageTime = lastMessageTimestamp != null
+                      ? DateFormat('hh:mm a').format(lastMessageTimestamp
+                          .toDate()
+                          .add(const Duration(hours: 8)))
+                      : '';
 
                   return ListTile(
                     leading: CircleAvatar(
@@ -91,12 +105,19 @@ var messageTime = lastMessageTimestamp != null
                     ),
                     title: Text(
                       '${customerData['first name']} ${customerData['last name']}',
-                      style: TextStyle(fontWeight: FontWeight.bold), // Added bold style for name
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold), // Bold style for name
                     ),
                     subtitle: Text(
                       lastMessage,
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis, // Truncate long messages
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: (isRead || workerId == senderId)
+                            ? FontWeight.normal
+                            : FontWeight.bold,
+                        color: Colors.black,
+                      ),
                     ),
                     trailing: Text(
                       messageTime,
@@ -104,7 +125,7 @@ var messageTime = lastMessageTimestamp != null
                         fontSize: 12,
                         color: Colors.grey,
                       ),
-                    ), // Display the time in the trailing position
+                    ),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -113,7 +134,7 @@ var messageTime = lastMessageTimestamp != null
                             conversationId: conversation.id,
                             receiverFirstName: customerData['first name'],
                             receiverLastName: customerData['last name'],
-                            receiverEmail: customerData['email'], // This can be removed from the ChatPage constructor if not needed
+                            receiverEmail: customerData['email'],
                             receiverUid: customerData['customerId'],
                           ),
                         ),

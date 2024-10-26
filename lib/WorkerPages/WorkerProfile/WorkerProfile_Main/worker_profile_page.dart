@@ -342,6 +342,7 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                 ],
               ),
               const SizedBox(height: 10),
+
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -392,7 +393,7 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                         ],
                       ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
+                        icon: const Icon(Icons.delete_rounded, color: Colors.red),
                         onPressed: () {
                           showDeleteServiceDialog(
                             service['id'],
@@ -405,6 +406,8 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                   );
                 },
               ),
+
+
               const Divider(thickness: 2),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -8,11 +8,11 @@ class CustomerChecksWorkerProfileServicesSeeAll extends StatefulWidget {
   const CustomerChecksWorkerProfileServicesSeeAll({super.key, required this.workerId});
 
   @override
-  _CustomerChecksWorkerProfileServicesSeeAllState createState() =>
-      _CustomerChecksWorkerProfileServicesSeeAllState();
+  CustomerChecksWorkerProfileServicesSeeAllState createState() =>
+      CustomerChecksWorkerProfileServicesSeeAllState();
 }
 
-class _CustomerChecksWorkerProfileServicesSeeAllState
+class CustomerChecksWorkerProfileServicesSeeAllState
     extends State<CustomerChecksWorkerProfileServicesSeeAll> {
   List<Map<String, dynamic>> services = [];
   List<Map<String, dynamic>> plumbingServices = [];
@@ -113,15 +113,30 @@ class _CustomerChecksWorkerProfileServicesSeeAllState
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+Widget build(BuildContext context) {
+  return Scaffold(
     backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('All Services'),
-        backgroundColor: Colors.blueAccent,
-        iconTheme: const IconThemeData(color: Colors.white),
-        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
+    appBar: AppBar(
+      centerTitle: true, // Centers the title
+      title: const Text(
+        'All Services',
+        style: TextStyle(
+          fontSize: 21, // Set font size to 21
+          fontFamily: 'Roboto', // Set font to Roboto
+          color: Colors.white, // Title color remains white
+        ),
       ),
+      backgroundColor: Colors.blueAccent,
+      iconTheme: const IconThemeData(
+        color: Colors.white, // Set back icon color to white
+      ),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new), // Use the new back arrow icon
+        onPressed: () {
+          Navigator.pop(context); // Handles back navigation
+        },
+      ),
+    ),
       body: isLoading // Check if still loading
           ? const Center(
               child: HandymanLoadingIndicator(), // Show custom loading indicator

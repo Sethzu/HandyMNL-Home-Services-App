@@ -70,7 +70,7 @@ class _CustomerHomePendingOffersState extends State<CustomerHomePendingOffers> {
                   .where('customerId',
                       isEqualTo: FirebaseAuth.instance.currentUser!.uid)
                   .where('status', isEqualTo: _selectedSegment)
-                  .orderBy('timestamp', descending: true) // Order by timestamp
+                  .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (!snapshot.hasData) {
@@ -88,7 +88,7 @@ class _CustomerHomePendingOffersState extends State<CustomerHomePendingOffers> {
                   );
                 }
 
-return ListView.builder(
+                return ListView.builder(
   itemCount: offers.length,
   itemBuilder: (context, index) {
     final offer = offers[index];
@@ -124,7 +124,7 @@ return ListView.builder(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Offer to ${offer['workerName']}',
+                '${offer['workerName']}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -165,11 +165,13 @@ return ListView.builder(
                   color: Colors.blueAccent,
                 ),
               ),
+              const SizedBox(height: 12),
+              _buildActionButton(context, offer),  // Call _buildActionButton for Pending/Accepted sections
             ],
           ),
-          trailing: _buildTrailingWidget(context, offer),
-                        ),
+          trailing: _buildTrailingWidget(context, offer), // Call _buildTrailingWidget for Declined section
                       ),
+                      )
                     );
                   },
                 );
@@ -191,51 +193,157 @@ return ListView.builder(
     }
   }
 
-  Widget _buildTrailingWidget(
-      BuildContext context, QueryDocumentSnapshot offer) {
+  Widget _buildTrailingWidget(BuildContext context, QueryDocumentSnapshot offer) {
+  if (_selectedSegment == 'Declined') {
+    return const Text(
+      'Declined',
+      style: TextStyle(
+        fontSize: 16,
+        color: Colors.red,
+      ),
+    );
+  } else {
+    return const SizedBox.shrink();  // Return nothing for other sections
+  }
+}
+
+
+  Widget _buildActionButton(BuildContext context, QueryDocumentSnapshot offer) {
     if (_selectedSegment == 'Pending') {
-      return const Text(
-        'Pending',
-        style: TextStyle(
-          fontSize: 16,
-          color: Colors.orange,
+      // "Edit Offer" button for Pending section
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.7,
+            height: 35,
+            child: ElevatedButton(
+              onPressed: () => _showEditOfferModalBottomSheet(context, offer),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                side: const BorderSide(color: Colors.blueAccent, width: 3),
+              ),
+              child: const Text(
+                'Edit Offer',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
         ),
       );
     } else if (_selectedSegment == 'Accepted') {
-      return PopupMenuButton<String>(
-        icon: const Icon(Icons.more_vert),
-        onSelected: (value) {
-          if (value == 'Rate & Review') {
-            showRateReviewModalBottomSheet(context, offer);
-          } else if (value == 'Message') {}
-        },
-        itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-          const PopupMenuItem<String>(
-            value: 'Rate & Review',
-            child: ListTile(
-              leading: Icon(Icons.star, color: Colors.amber),
-              title: Text('Rate & Review'),
+      // "Leave a Review" button for Accepted section
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.7,
+            height: 35,
+            child: ElevatedButton(
+              onPressed: () => showRateReviewModalBottomSheet(context, offer),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                side: const BorderSide(color: Colors.blueAccent, width: 3),
+              ),
+              child: const Text(
+                'Leave a Review',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ),
-          const PopupMenuItem<String>(
-            value: 'Message',
-            child: ListTile(
-              leading: Icon(Icons.message, color: Colors.blueAccent),
-              title: Text('Message'),
-            ),
-          ),
-        ],
-      );
-    } else {
-      return const Text(
-        'Declined',
-        style: TextStyle(
-          fontSize: 16,
-          color: Colors.red,
         ),
       );
+    } else {
+      // No button for Declined section
+      return const SizedBox.shrink();
     }
   }
+
+  void _showEditOfferModalBottomSheet(BuildContext context, QueryDocumentSnapshot offer) {
+  final TextEditingController priceController =
+      TextEditingController(text: offer['price']);
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (context) {
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 16,
+          right: 16,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 20),
+              const Text(
+                'Edit Offer Price',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: priceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Enter new price',
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.blueAccent,
+                      width: 3.0, // Border width on focus
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.grey, // Default border color when not focused
+                      width: 1.0,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  // Update the price in the 'PendingOffers' collection
+                  await FirebaseFirestore.instance
+                      .collection('PendingOffers')
+                      .doc(offer.id)
+                      .update({'price': priceController.text});
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Offer price updated successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 15,
+                    horizontal: 80,
+                  ),
+                ),
+                child: const Text(
+                  'Update',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
 
   void showRateReviewModalBottomSheet(
       BuildContext context, QueryDocumentSnapshot offer) {
@@ -249,16 +357,19 @@ return ListView.builder(
   }
 }
 
-// Modal Bottom Sheet for Rating and Review
 
+// Modal Bottom Sheet for Rating and Review
 class RateReviewBottomSheet extends StatefulWidget {
   final QueryDocumentSnapshot offer;
 
+
   const RateReviewBottomSheet({super.key, required this.offer});
+
 
   @override
   _RateReviewBottomSheetState createState() => _RateReviewBottomSheetState();
 }
+
 
 class _RateReviewBottomSheetState extends State<RateReviewBottomSheet> {
   final TextEditingController _reviewController = TextEditingController();
@@ -266,16 +377,20 @@ class _RateReviewBottomSheetState extends State<RateReviewBottomSheet> {
   bool _isError = false;
   bool _hasReviewed = false;
 
+
   @override
   void initState() {
     super.initState();
     _checkIfAlreadyReviewed();
   }
 
+
   Future<void> _checkIfAlreadyReviewed() async {
     final currentUser = FirebaseAuth.instance.currentUser;
 
+
     if (currentUser == null) return;
+
 
     final reviewSnapshot = await FirebaseFirestore.instance
         .collection('CustomerGiveRating')
@@ -285,12 +400,14 @@ class _RateReviewBottomSheetState extends State<RateReviewBottomSheet> {
         .where('subcategory', isEqualTo: widget.offer['subcategory'])
         .get();
 
+
     if (reviewSnapshot.docs.isNotEmpty) {
       setState(() {
         _hasReviewed = true;
       });
     }
   }
+
 
   Future<void> _submitReview() async {
     if (_reviewController.text.isEmpty) {
@@ -300,7 +417,9 @@ class _RateReviewBottomSheetState extends State<RateReviewBottomSheet> {
       return;
     }
 
+
     final currentUser = FirebaseAuth.instance.currentUser;
+
 
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -311,6 +430,7 @@ class _RateReviewBottomSheetState extends State<RateReviewBottomSheet> {
       );
       return;
     }
+
 
     if (_hasReviewed) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -323,10 +443,12 @@ class _RateReviewBottomSheetState extends State<RateReviewBottomSheet> {
       return;
     }
 
+
     final customerDoc = await FirebaseFirestore.instance
         .collection('Customers')
         .doc(currentUser.uid)
         .get();
+
 
     if (!customerDoc.exists) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -338,8 +460,10 @@ class _RateReviewBottomSheetState extends State<RateReviewBottomSheet> {
       return;
     }
 
+
     final customerName =
         "${customerDoc['first name']} ${customerDoc['last name']}";
+
 
     // Add Review to Firestore
     await FirebaseFirestore.instance.collection('CustomerGiveRating').add({
@@ -356,9 +480,11 @@ class _RateReviewBottomSheetState extends State<RateReviewBottomSheet> {
       'customerEmail': currentUser.email,
     });
 
+
     // Calculate and Update Worker Average Rating
     await _updateWorkerAverageRating(widget.offer['workerId'],
         widget.offer['workerName'], widget.offer['service']);
+
 
     // Success message
     Navigator.pop(context);
@@ -370,6 +496,7 @@ class _RateReviewBottomSheetState extends State<RateReviewBottomSheet> {
     );
   }
 
+
   // Function to calculate and update worker's average rating in both 'WorkerAverageRatings' and 'Services' collection
   Future<void> _updateWorkerAverageRating(
       String workerId, String workerName, String service) async {
@@ -378,17 +505,21 @@ class _RateReviewBottomSheetState extends State<RateReviewBottomSheet> {
         .where('workerId', isEqualTo: workerId)
         .get();
 
+
     if (ratingSnapshot.docs.isNotEmpty) {
       double totalRating = 0;
       int totalReviews = ratingSnapshot.docs.length;
+
 
       for (var doc in ratingSnapshot.docs) {
         totalRating += doc['ratingnumber'];
       }
 
+
       // Round to 1 decimal place
       double averageRating =
           double.parse((totalRating / totalReviews).toStringAsFixed(1));
+
 
       // Update WorkerAverageRatings collection
       await FirebaseFirestore.instance
@@ -400,6 +531,7 @@ class _RateReviewBottomSheetState extends State<RateReviewBottomSheet> {
         'totalReviews': totalReviews,
         'averageRating': averageRating,
       });
+
 
       // Update Services collection for the specific worker and service
       await FirebaseFirestore.instance
@@ -416,6 +548,7 @@ class _RateReviewBottomSheetState extends State<RateReviewBottomSheet> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -522,3 +655,6 @@ class _RateReviewBottomSheetState extends State<RateReviewBottomSheet> {
     );
   }
 }
+
+
+

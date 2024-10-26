@@ -224,12 +224,26 @@ class _WorkerServicesSeeAllState extends State<WorkerServicesSeeAll> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('All Services'),
+        centerTitle: true, // Centers the title
+        title: const Text(
+          'All Services',
+          style: TextStyle(
+            fontSize: 21, // Set font size to 21
+            fontFamily: 'Roboto', // Set font to Roboto
+            color: Colors.white, // Title color remains white
+          ),
+        ),
         backgroundColor: Colors.blueAccent,
-        iconTheme:
-            const IconThemeData(color: Colors.white), // Set icon color to white
-        titleTextStyle: const TextStyle(
-            color: Colors.white, fontSize: 20), // Set title color to white
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Set back icon color to white
+        ),
+        leading: IconButton(
+          icon: const Icon(
+              Icons.arrow_back_ios_new), // Use the new back arrow icon
+          onPressed: () {
+            Navigator.pop(context); // Handles back navigation
+          },
+        ),
       ),
       body: services.isNotEmpty
           ? SingleChildScrollView(

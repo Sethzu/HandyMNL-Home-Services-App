@@ -53,11 +53,29 @@ class _WorkerReviewsSeeAllState extends State<WorkerReviewsSeeAll> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('All Reviews'),
+        centerTitle: true, // Centers the title
+        title: const Text(
+          'All Reviews',
+          style: TextStyle(
+            fontSize: 21, // Set font size to 21
+            fontFamily: 'Roboto', // Set font to Roboto
+            color: Colors.white, // Title color remains white
+          ),
+        ),
         backgroundColor: Colors.blueAccent,
-        iconTheme: const IconThemeData(color: Colors.white), // Make AppBar icons white
-        actionsIconTheme: const IconThemeData(color: Colors.white), // Make actions icons white
-        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20), // Make title text white
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Set back icon color to white
+        ),
+        leading: IconButton(
+          icon: const Icon(
+              Icons.arrow_back_ios_new), // Use the new back arrow icon
+          onPressed: () {
+            Navigator.pop(context); // Handles back navigation
+          },
+        ),
+        actionsIconTheme: const IconThemeData(
+          color: Colors.white, // Set actions icon color to white
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -72,7 +90,8 @@ class _WorkerReviewsSeeAllState extends State<WorkerReviewsSeeAll> {
                   return Column(
                     children: [
                       ListTile(
-                        tileColor: Colors.white, // Set the background color to white
+                        tileColor:
+                            Colors.white, // Set the background color to white
                         title: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -112,7 +131,9 @@ class _WorkerReviewsSeeAllState extends State<WorkerReviewsSeeAll> {
                           ],
                         ),
                       ),
-                      const Divider(thickness: 1), // Add subtle border (divider) below each review
+                      const Divider(
+                          thickness:
+                              1), // Add subtle border (divider) below each review
                     ],
                   );
                 },

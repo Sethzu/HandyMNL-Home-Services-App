@@ -9,23 +9,28 @@ import 'package:test_2/CustomerPages/customer_home_pendingoffers.dart';
 import 'package:test_2/CustomerPages/CustomerProfile/CustomerProfile_Main/customer_profile.dart';
 import 'package:test_2/CustomerPages/customer_inbox.dart';
 
+
 class CustomerNavigation extends StatefulWidget {
   const CustomerNavigation({super.key});
 
+
   @override
-  _CustomerNavigationState createState() => _CustomerNavigationState();
+  CustomerNavigationState createState() => CustomerNavigationState();
 }
 
-class _CustomerNavigationState extends State<CustomerNavigation> {
+
+class CustomerNavigationState extends State<CustomerNavigation> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String firstName = '';
   int _selectedIndex = 0;
+
 
   @override
   void initState() {
     super.initState();
     fetchCustomerFirstName();
   }
+
 
   // Fetch customer's first name from Firestore
   Future<void> fetchCustomerFirstName() async {
@@ -36,6 +41,7 @@ class _CustomerNavigationState extends State<CustomerNavigation> {
             .collection('Customers')
             .doc(currentUser.uid)
             .get();
+
 
         if (customerDoc.exists) {
           setState(() {
@@ -48,11 +54,13 @@ class _CustomerNavigationState extends State<CustomerNavigation> {
     }
   }
 
+
   // List of pages for navigation
   final List<Widget> _pages = [
     const CustomerHomePendingOffers(),
     const CustomerProfilePage(),
   ];
+
 
   // Handle BottomAppBar icon tap
   void _onItemTapped(int index) {
@@ -60,6 +68,7 @@ class _CustomerNavigationState extends State<CustomerNavigation> {
       _selectedIndex = index;
     });
   }
+
 
   // Function to open the dialog for searching services
   void _openServiceDialog() {
@@ -69,6 +78,7 @@ class _CustomerNavigationState extends State<CustomerNavigation> {
       builder: (context) => const _ServiceSearchDialog(),
     );
   }
+
 
   @override
 Widget build(BuildContext context) {
@@ -103,7 +113,7 @@ Widget build(BuildContext context) {
               ),
               // Inbox Icon Button (replacing the settings icon)
               IconButton(
-                icon: const Icon(Icons.forum_rounded, 
+                icon: const Icon(Icons.forum_rounded,
                     color: Colors.grey, size: 30), // Inbox icon instead of settings
                 onPressed: () {
                   Navigator.push(
@@ -116,6 +126,7 @@ Widget build(BuildContext context) {
             ],
           )
         : null, // Remove the AppBar on the Profile page
+
 
     body: SafeArea(
       child: _pages[_selectedIndex],
@@ -164,6 +175,8 @@ Widget build(BuildContext context) {
     );
   }
 }
+
+
 
 // Service Search Dialog
 class _ServiceSearchDialog extends StatefulWidget {

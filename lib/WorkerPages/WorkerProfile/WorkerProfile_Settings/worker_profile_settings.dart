@@ -9,6 +9,8 @@ import 'package:test_2/WorkerPages/WorkerProfile/WorkerProfile_Settings/worker_p
 import 'package:test_2/WorkerPages/WorkerProfile/WorkerProfile_Settings/worker_profile_terms.dart';
 import 'package:test_2/userAuthentication/auth_page.dart'; // Import AuthPage for sign out
 import 'package:image_picker/image_picker.dart'; // For the image picker functionality
+import 'package:flutter/cupertino.dart';
+
 import 'dart:io';
 
 // Import your Edit Profile page
@@ -41,19 +43,75 @@ class _WorkerProfileSettingsState extends State<WorkerProfileSettings> {
     _fetchUserData(); // Fetch user data on initialization
   }
 
-  // Method for picking an image
-  Future<void> _pickImage(ImageSource source) async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: source);
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+ // Method for picking an image (camera or gallery)
+Future<void> _sendImage() async {
+  showCupertinoModalPopup(
+    context: context,
+    builder: (BuildContext context) {
+      return CupertinoActionSheet(
+        actions: <Widget>[
+          // Camera option
+          CupertinoActionSheetAction(
+            onPressed: () async {
+              Navigator.of(context).pop(); // Close action sheet
+              await _pickImage(ImageSource.camera); // Take a photo with camera
+            },
+            child: const Text(
+              'Take a photo',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.blueAccent,
+              ),
+            ),
+          ),
+          // Gallery option
+          CupertinoActionSheetAction(
+            onPressed: () async {
+              Navigator.of(context).pop(); // Close action sheet
+              await _pickImage(ImageSource.gallery); // Choose image from gallery
+            },
+            child: const Text(
+              'Choose from library',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.blueAccent,
+              ),
+            ),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () {
+            Navigator.of(context).pop(); // Close the action sheet
+          },
+          isDefaultAction: true,
+          child: const Text(
+            'Cancel',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.blueAccent,
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
 
-      // Upload the image to Firebase Storage and update Firestore
-      await _uploadImageToFirebase();
-    }
+  // Method for picking an image from the source selected (camera or gallery)
+Future<void> _pickImage(ImageSource source) async {
+  final ImagePicker picker = ImagePicker();
+  final XFile? pickedFile = await picker.pickImage(source: source);
+  if (pickedFile != null) {
+    setState(() {
+      _imageFile = File(pickedFile.path);
+    });
+
+    // Upload the image to Firebase Storage and update Firestore
+    await _uploadImageToFirebase();
   }
+}
+
 
   // Upload image to Firebase Storage and save the download URL in Firestore
   Future<void> _uploadImageToFirebase() async {
@@ -184,19 +242,19 @@ class _WorkerProfileSettingsState extends State<WorkerProfileSettings> {
                                   as ImageProvider, // Temporary placeholder
                         ),
                         Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: () {
-                              _pickImage(ImageSource.gallery);
-                            },
-                            child: const CircleAvatar(
-                              radius: 18,
-                              backgroundColor: Colors.blueAccent,
-                              child: Icon(Icons.edit, color: Colors.white),
-                            ),
-                          ),
-                        ),
+  bottom: 0,
+  right: 0,
+  child: GestureDetector(
+    onTap: () {
+      _sendImage();  // Show the CupertinoActionSheet for choice
+    },
+    child: const CircleAvatar(
+      radius: 18,
+      backgroundColor: Colors.blueAccent,
+      child: Icon(Icons.edit, color: Colors.white),
+    ),
+  ),
+),
                       ],
                     ),
                   ),

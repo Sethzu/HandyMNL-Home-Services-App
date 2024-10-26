@@ -60,13 +60,25 @@ class _CustomerProfileReviewsSeeAllState
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: true, // Centers the title
         title: const Text(
           'All Reviews',
-          style: TextStyle(color: Colors.white), // Make the title white
+          style: TextStyle(
+            fontSize: 21, // Set font size to 21
+            fontFamily: 'Roboto', // Set font to Roboto
+            color: Colors.white, // Title color remains white
+          ),
         ),
         backgroundColor: Colors.blueAccent,
         iconTheme: const IconThemeData(
-          color: Colors.white, // Make the back button white
+          color: Colors.white, // Set back icon color to white
+        ),
+        leading: IconButton(
+          icon: const Icon(
+              Icons.arrow_back_ios_new), // Use the new back arrow icon
+          onPressed: () {
+            Navigator.pop(context); // Handles back navigation
+          },
         ),
       ),
       body: Padding(
@@ -93,8 +105,8 @@ class _CustomerProfileReviewsSeeAllState
                           children: [
                             Text(
                               review['workerName'],
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             Text(
                               formattedDate,
